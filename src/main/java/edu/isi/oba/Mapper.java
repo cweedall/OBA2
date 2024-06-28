@@ -151,7 +151,7 @@ class Mapper {
      */
     public void createSchemas(String destinationDir) {
         final var query = new Query(destinationDir);
-        final var pathGenerator = new PathGenerator(this.configData.getConfigFlags(), this.configData.getAuth() == null ? false : this.configData.getAuth().getEnable());
+        final var pathGenerator = new PathGenerator(this.configData);
 
         try {
             query.getAll(DEFAULT_DIR_QUERY);

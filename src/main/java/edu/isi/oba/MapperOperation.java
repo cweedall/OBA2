@@ -1,9 +1,12 @@
 package edu.isi.oba;
 
+import edu.isi.oba.config.AuthConfig;
+
 import io.swagger.models.Method;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.examples.Example;
 import io.swagger.v3.oas.models.media.*;
+import io.swagger.v3.oas.models.parameters.HeaderParameter;
 import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.oas.models.parameters.PathParameter;
 import io.swagger.v3.oas.models.parameters.QueryParameter;
@@ -20,7 +23,7 @@ enum Cardinality {
 }
 
 class MapperOperation {
-  private boolean auth;
+  private AuthConfig authConfig;
   private String summary;
   private String description;
   private final String schemaName;
@@ -36,8 +39,8 @@ class MapperOperation {
     return operation;
   }
 
-  public MapperOperation(String schemaName, String schemaURI, Method method, Cardinality cardinality, Boolean auth) {
-    this.auth = auth;
+  public MapperOperation(String schemaName, String schemaURI, Method method, Cardinality cardinality, AuthConfig authConfig) {
+    this.authConfig = authConfig;
     this.cardinality = cardinality;
     this.schemaName = schemaName;
     this.schemaURI = schemaURI;
@@ -72,7 +75,7 @@ class MapperOperation {
               .schema(new StringSchema()));
     }
 
-    if (this.auth && Set.of(Method.PATCH, Method.PUT, Method.POST, Method.DELETE).contains(method)) {
+    if (this.authConfig != null && this.authConfig.getEnable() && Set.of(Method.PATCH, Method.PUT, Method.POST, Method.DELETE).contains(method)) {
       parameters.add(new QueryParameter()
               .description("Username")
               .name("user")
@@ -102,12 +105,13 @@ class MapperOperation {
     String responseDescriptionOk;
     ApiResponse responseOk;
     //Set parameters
-    if (this.auth)
+    if (this.authConfig != null && this.authConfig.getEnable()) {
       parameters.add(new QueryParameter()
               .name("username")
               .description("Name of the user graph to query")
               .required(false)
               .schema(new StringSchema()));
+    }
 
     switch (cardinality) {
       case PLURAL: {
@@ -228,8 +232,7 @@ class MapperOperation {
     apiResponses
             .addApiResponse("200", new ApiResponse()
                     .content(content)
-                    .description("Updated")
-            )
+                    .description("Updated"))
             .addApiResponse("404", new ApiResponse()
                     .description("Not Found"));
   }
